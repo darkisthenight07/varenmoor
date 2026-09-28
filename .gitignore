@@ -1,7 +1,9 @@
 venv/
+.env
 *.env
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+build/
+dist/
+.pytest_cache/
 memory_store/
