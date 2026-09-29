@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Varenmoor model configuration — the single place to choose which LLM does what.
+#
+# Copy to ./models.yaml (or run `varenmoor init-config`) to customise, or point
+# VARENMOOR_MODELS_FILE at any path. Check your setup with `varenmoor models --ping`.
+#
+# Every role has a `chain`: models are tried in order, and if one is rate-limited,
+# down, or has no API key set, the next is used. You only need ONE provider key
+# to play; more keys just give you more headroom and fallbacks.
+#
+# Free-tier notes (verified Sept 2026; these change often, so re-check):
+#   groq        30 req/min but only ~8K tokens/min + 200K tokens/day PER MODEL.
+#               Llama 3.3 70B / 3.1 8B are now enterprise-only there, so use gpt-oss.
+#   gemini      Flash / Flash-Lite are free, Pro is not. Quotas are shown in AI Studio
+#               and vary; sources disagree, so treat the rpm below as a safe guess.
+#   mistral     "Experiment" tier: ~1B tokens/month, ~1 req/sec. Needs phone verification.
+#   openrouter  ":free" models are ~50 req/day. Last-resort fallback only.
+# ─────────────────────────────────────────────────────────────────────────────
+
+providers:
+  groq:       {kind: groq,          api_key_env: GROQ_API_KEY}        # console.groq.com
+  gemini:     {kind: google,        api_key_env: GOOGLE_API_KEY}      # aistudio.google.com
+  mistral:    {kind: mistral,       api_key_env: MISTRAL_API_KEY}     # console.mistral.ai
+  openrouter: {kind: openai_compat, api_key_env: OPENROUTER_API_KEY,  # openrouter.ai
+               base_url: "https://openrouter.ai/api/v1"}
+
+# alias -> concrete model. `rpm` makes Varenmoor pace itself below the provider's
+# limit instead of hitting a 429. Any extra keys (e.g. reasoning_effort) are passed
+# straight to the provider client.
+models:
+  groq-120b:         {provider: groq,       model: openai/gpt-oss-120b,        rpm: 25, reasoning_effort: low}
+  groq-20b:          {provider: groq,       model: openai/gpt-oss-20b,         rpm: 25, reasoning_effort: low}
+  gemini-flash:      {provider: gemini,     model: gemini-flash-latest,        rpm: 8}
+  gemini-flash-lite: {provider: gemini,     model: gemini-flash-lite-latest,   rpm: 12}
+  mistral-medium:    {provider: mistral,    model: mistral-medium-latest,      rpm: 40}
+  mistral-small:     {provider: mistral,    model: mistral-small-latest,       rpm: 45}
+  openrouter-free:   {provider: openrouter, model: "openai/gpt-oss-120b:free", rpm: 15}
+
+# role -> which models handle it, in priority order.
+roles:
+  # Writes the scene narration, decides whether the story advances, and briefs the NPCs.
+  # Big prompt, so it goes to Gemini (large token allowance) to spare Groq's 8K TPM.
+  narrator:
+    chain: [gemini-flash, mistral-medium, groq-120b, openrouter-free]
+    temperature: 0.8
+    max_tokens: 1000
+
+  # The NPC's spoken line. Character voice matters most here.
+  npc_dialogue:
+    chain: [groq-120b, mistral-medium, gemini-flash, openrouter-free]
+    temperature: 0.8
+    max_tokens: 600
+
+  # Sanitises player input. Short and latency-critical: smallest fast model.
+  input_review:
+    chain: [groq-20b, gemini-flash-lite, mistral-small]
+    temperature: 0.0
+    max_tokens: 150
+
+  # Rewrites an NPC line only when a check flagged a problem (see pipeline.output_review).
+  output_review:
+    chain: [groq-20b, mistral-small, gemini-flash-lite]
+    temperature: 0.2
+    max_tokens: 500
+
+  # Memory manager: after each turn, decides emotion changes and what to remember.
+  # Runs in the background, so latency is irrelevant; Mistral's big monthly allowance suits it.
+  memory:
+    chain: [mistral-small, gemini-flash-lite, groq-20b]
+    temperature: 0.0
+    max_tokens: 500
+
+# How many LLM calls each turn is allowed to spend.
+pipeline:
+  input_review: llm        # llm: regex guard then a small model | heuristic: regex only, no call | off
+  output_review: on_flag   # on_flag: LLM rewrite only when a check trips | always | off
+  background_memory: true  # run the memory manager after the reply is shown
+  skip_memory_on_silence: true  # don't spend a call when the player said nothing meaningful
+
+# Failover behaviour.
+settings:
+  timeout_s: 45            # per-request timeout
+  max_retries: 1           # provider-client retries before we fail over
+  cooldown_s: 30           # bench a failing model this long (doubles on repeats)
+  max_cooldown_s: 3600
