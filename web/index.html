@@ -1,33 +1,306 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Varenmoor</title>
-<style>
-:root{--bg:#0d0b0e;--fg:#d8d0c8;--dim:#8a7f78;--acc:#a33;--card:#17131a}
-@media(prefers-color-scheme:light){:root{--bg:#f2ede8;--fg:#201a1a;--dim:#6b605a;--acc:#8b2020;--card:#e6dfd8}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 Georgia,serif;display:flex;flex-direction:column;height:100dvh}
-header{padding:12px 18px;border-bottom:1px solid var(--card);letter-spacing:.2em;text-transform:uppercase;font-size:14px;color:var(--acc)}
-#log{flex:1;overflow-y:auto;padding:18px;max-width:760px;width:100%;margin:0 auto}
-.m{margin:0 0 16px;white-space:pre-wrap}.n{color:var(--dim);font-style:italic}.who{font-weight:bold;color:var(--acc);display:block;font-size:13px;letter-spacing:.1em}
-.you{text-align:right}.sys{color:var(--dim);font-size:14px;text-align:center}.stage{border-top:1px solid var(--card);padding-top:12px;color:var(--dim)}
-form{display:flex;gap:8px;padding:12px 18px;max-width:760px;width:100%;margin:0 auto}
-input{flex:1;padding:10px;background:var(--card);color:var(--fg);border:1px solid var(--dim);border-radius:6px;font:inherit}
-button{padding:10px 16px;background:var(--acc);color:#fff;border:0;border-radius:6px;font:inherit;cursor:pointer}button:disabled{opacity:.5}
-</style></head><body>
-<header>Varenmoor</header>
-<div id="log"></div>
-<form id="f"><input id="t" autocomplete="off" placeholder="Your name to begin (or leave blank)…" autofocus>
-<button id="go">Enter</button></form>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#1d1718">
+  <meta name="description" content="Step into Varenmoor, an atmospheric interactive story where your words shape what happens next.">
+  <title>Varenmoor — An Interactive Adventure Story</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>* { box-sizing: border-box; border-color: var(--border); }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: Georgia, serif; }
+input, button { font: inherit; }
+[hidden] { display: none !important; }
+:root {
+  --radius: 0.375rem;
+  --background: oklch(0.12 0.012 15);
+  --foreground: oklch(0.91 0.018 75);
+  --card: oklch(0.16 0.013 20);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.47 0.14 22);
+  --primary-foreground: oklch(0.97 0.014 75);
+  --secondary: oklch(0.22 0.018 28);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.19 0.01 35);
+  --muted-foreground: oklch(0.62 0.018 62);
+  --accent: oklch(0.25 0.035 25);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.58 0.18 24);
+  --destructive-foreground: var(--foreground);
+  --border: oklch(0.32 0.02 38);
+  --input: oklch(0.26 0.018 34);
+  --ring: oklch(0.65 0.075 63);
+  --ember: oklch(0.64 0.12 24);
+  --gold: oklch(0.68 0.065 75);
+  --image-overlay: linear-gradient(90deg, oklch(0.09 0.008 20 / 78%) 0%, oklch(0.1 0.01 20 / 24%) 52%, oklch(0.1 0.01 20 / 5%) 100%), linear-gradient(0deg, oklch(0.1 0.01 20 / 65%), transparent 30%);
+  --surface-shadow: 0 -12px 35px oklch(0.05 0 0 / 30%);
+}
+
+@layer base {
+  * { box-sizing: border-box; border-color: var(--border); }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--background); color: var(--foreground); font-family: Georgia, serif; }
+  button, input { font: inherit; }
+  ::selection { background: var(--primary); color: var(--primary-foreground); }
+}
+
+.game-shell { min-height: 100dvh; display: flex; flex-direction: column; background: var(--background); }
+.site-header { height: 74px; flex: none; border-bottom: 1px solid var(--border); background: var(--background); position: relative; z-index: 2; }
+.site-header-inner { height: 100%; max-width: 1440px; margin: auto; padding: 0 5.3%; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.wordmark { display: inline-flex; align-items: center; gap: 15px; color: var(--foreground); text-decoration: none; font: 600 16px/1 Georgia, serif; letter-spacing: .19em; white-space: nowrap; }
+.wordmark-mark {
+  display: grid;
+  place-items: center;
+  width: 73px;
+  height: 73px;
+  border: 1px solid var(--ember);
+  color: var(--ember);
+  letter-spacing: 0;
+  transform: rotate(-9deg);
+  overflow: hidden;
+}
+
+.wordmark-mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transform: rotate(9deg);
+}
+.header-right { display: flex; align-items: center; gap: 30px; }
+.header-edition, .restart-button { font: 10px/1 Arial, Helvetica, sans-serif; letter-spacing: .2em; color: var(--muted-foreground); }
+.restart-button { letter-spacing: .08em; height: 36px; }
+.restart-button:hover { color: var(--foreground); }
+.main-content { flex: 1; }
+.main-content:not(.is-playing) { display: flex; flex-direction: column; }
+.main-content:not(.is-playing) .reading-area { flex: 1; display: grid; place-items: center; }
+.scene { height: clamp(325px, 31vw, 465px); overflow: hidden; position: relative; background: var(--card); }
+.scene-image { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center 47%; }
+.scene-shade { position: absolute; inset: 0; background: var(--image-overlay); }
+.scene-content { position: absolute; left: max(7.5%, calc((100% - 1210px)/2)); top: 50%; transform: translateY(-45%); }
+.scene-kicker { display: flex; align-items: center; gap: 13px; font: 10px/1 Arial, Helvetica, sans-serif; letter-spacing: .32em; color: var(--gold); }
+.kicker-line { display: inline-block; height: 1px; width: 31px; background: var(--gold); }
+.scene h1 { margin: 25px 0 12px; font: 400 clamp(60px, 7.3vw, 112px)/.97 Georgia, serif; letter-spacing: 0; color: var(--foreground); text-shadow: 0 2px 24px var(--background); }
+.title-period { color: var(--ember); }
+.scene-content p { margin: 0; font: italic 21px/1.55 Georgia, serif; color: var(--foreground); text-shadow: 0 1px 10px var(--background); }
+.scene-index { position: absolute; right: 5.3%; bottom: 28px; display: flex; gap: 12px; align-items: center; color: var(--foreground); font: 10px/1 Arial, Helvetica, sans-serif; letter-spacing: .2em; }
+.scene-index-line { width: 29px; height: 1px; background: currentColor; opacity: .7; }
+.reading-area { min-height: 280px; }
+.welcome-content { text-align: center; max-width: 600px; padding: 40px 20px 44px; margin: 0 auto; }
+.ornament { display: flex; justify-content: center; align-items: center; gap: 15px; color: var(--gold); margin-bottom: 24px; }
+.ornament span { width: 48px; height: 1px; background: var(--border); }
+.section-label { margin: 0 0 14px; color: var(--ember); font: 10px/1 Arial, Helvetica, sans-serif; letter-spacing: .32em; }
+.welcome-content h2 { margin: 0; font: 400 clamp(32px, 3.5vw, 45px)/1.14 Georgia, serif; letter-spacing: 0; }
+.welcome-description { max-width: 430px; margin: 16px auto 0; font: 16px/1.65 Georgia, serif; color: var(--muted-foreground); }
+.composer-wrap { position: sticky; bottom: 0; z-index: 2; width: 100%; background: var(--background); border-top: 1px solid var(--border); box-shadow: var(--surface-shadow); }
+.composer-inner { width: min(790px, calc(100% - 40px)); margin: 0 auto; padding: 18px 0 12px; }
+.composer-form { display: flex; gap: 9px; align-items: stretch; }
+.composer-input-wrap { flex: 1; min-width: 0; display: flex; align-items: center; border: 1px solid var(--border); background: var(--card); transition: border-color .2s; }
+.composer-input-wrap:focus-within { border-color: var(--gold); }
+.input-flourish { color: var(--gold); margin: 0 16px 0 19px; font-size: 17px; }
+.composer-input-wrap input { width: 100%; min-width: 0; border: 0; outline: none; background: none; color: var(--foreground); height: 54px; font: 16px Georgia, serif; }
+.composer-input-wrap input::placeholder { color: var(--muted-foreground); opacity: 1; }
+.composer-input-wrap input:disabled { opacity: .6; }
+.enter-hint { display: flex; align-items: center; gap: 6px; margin: 0 15px; color: var(--muted-foreground); font: 9px Arial, Helvetica, sans-serif; letter-spacing: .15em; white-space: nowrap; }
+.composer-footnote { display: flex; justify-content: center; align-items: center; gap: 13px; margin-top: 11px; color: var(--muted-foreground); font: 9px Arial, Helvetica, sans-serif; letter-spacing: .2em; }
+.composer-footnote span:first-child, .composer-footnote span:last-child { color: var(--gold); font-size: 9px; }
+.error-message { margin: 0 0 10px; color: var(--destructive); font: 13px/1.4 Arial, Helvetica, sans-serif; }
+.ended-controls { display: flex; align-items: center; justify-content: space-between; gap: 15px; color: var(--muted-foreground); font-style: italic; }
+.is-playing .scene { height: clamp(180px, 20vw, 275px); }
+.is-playing .scene h1 { font-size: clamp(52px, 5vw, 78px); margin: 14px 0 8px; }
+.is-playing .scene-content p { font-size: 17px; }
+.is-playing .scene-index { display: none; }
+.transcript { width: min(720px, calc(100% - 40px)); margin: 0 auto; padding: 36px 0 42px; }
+.transcript-heading { display: flex; align-items: center; gap: 22px; margin-bottom: 39px; color: var(--gold); font: 10px Arial, Helvetica, sans-serif; letter-spacing: .25em; white-space: nowrap; }
+.heading-rule { flex: 1; height: 1px; background: var(--border); }
+.entry { margin: 0 0 29px; animation: reveal .35s ease-out both; }
+.entry p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 18px/1.82 Georgia, serif; }
+.entry-narration { color: var(--foreground); }
+.entry-say { padding-left: 23px; border-left: 2px solid var(--primary); }
+.entry-say p { color: var(--foreground); }
+.entry-speaker { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; color: var(--ember); font: 10px Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: .18em; }
+.entry-you { max-width: 84%; margin-left: auto; padding: 17px 21px; background: var(--secondary); border: 1px solid var(--border); }
+.entry-you .entry-speaker { color: var(--gold); }
+.entry-you p { font-size: 16px; line-height: 1.6; }
+.ending { display: flex; justify-content: center; align-items: center; gap: 20px; padding: 30px 0; color: var(--gold); font: 13px Arial, Helvetica, sans-serif; letter-spacing: .3em; }
+.ending-decoration { color: var(--ember); }
+.loading-line { display: flex; align-items: center; gap: 10px; color: var(--muted-foreground); font: italic 15px Georgia, serif; }
+.loading-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ember); animation: pulse 1.2s infinite; }
+@keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 50% { opacity: .3; } }
+@media (max-width: 640px) {
+  .site-header { height: 63px; }
+  .site-header-inner { padding: 0 19px; }
+  .wordmark { font-size: 13px; gap: 10px; letter-spacing: .13em; }
+  .wordmark-mark { width: 27px; height: 27px; font-size: 20px; }
+  .header-edition { display: none; }
+  .restart-button span { display: none; }
+  .scene { height: 350px; }
+  .scene-image { object-position: 61% center; }
+  .scene-content { left: 22px; top: 51%; }
+  .scene h1 { font-size: clamp(53px, 14vw, 78px); margin: 21px 0 12px; }
+  .scene-kicker { font-size: 8px; letter-spacing: .23em; }
+  .scene-content p { font-size: 17px; }
+  .scene-index { right: 20px; bottom: 18px; font-size: 8px; }
+  .welcome-content { padding-top: 30px; padding-bottom: 32px; }
+  .welcome-content h2 { font-size: 35px; }
+  .welcome-description { font-size: 15px; }
+  .composer-inner { width: calc(100% - 28px); padding-top: 12px; }
+  .composer-form { gap: 7px; }
+  .input-flourish { margin: 0 10px; }
+  .composer-input-wrap input { height: 50px; font-size: 14px; }
+  .enter-hint { display: none; }
+  .is-playing .scene { height: 190px; }
+  .is-playing .scene h1 { font-size: 53px; }
+  .is-playing .scene-content p { display: none; }
+  .transcript { padding-top: 26px; }
+  .entry p { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+/* Standalone controls for the repository's static web deployment. */
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+.story-button { flex: none; height: 54px; padding: 0 24px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 0; background: var(--primary); color: var(--primary-foreground); font: 600 10px Arial, sans-serif; letter-spacing: .16em; white-space: nowrap; transition: background .2s; }
+.story-button:hover:not(:disabled) { background: var(--ember); }
+.story-button svg { width: 17px; height: 17px; }
+.restart-button { border: 0; background: transparent; display: inline-flex; align-items: center; gap: 8px; padding: 0 8px; }
+.restart-button svg { width: 15px; height: 15px; }
+@media (max-width: 640px) { .story-button { height: 52px; padding: 0 13px; } }
+</style>
+</head>
+<body>
+<div class="game-shell">
+  <header class="site-header"><div class="site-header-inner">
+    <a class="wordmark" href="./" aria-label="Varenmoor home"><span class="wordmark-mark" aria-hidden="true"><img src="favicon.svg" alt=""></span><span>VARENMOOR</span></a>
+    <div class="header-right"><span class="header-edition">AN INTERACTIVE GOTHIC TALE</span><button type="button" id="restart" class="restart-button" title="Begin a new story" aria-label="Begin a new story" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11a9 9 0 1 1 2.8 6.5M3 4v7h7"/></svg><span>Begin again</span></button></div>
+  </div></header>
+  <main class="main-content" id="main">
+    <section class="scene" aria-label="The castle of Varenmoor">
+      <img class="scene-image" src="varenmoor.jpg" width="1536" height="1024">
+      <div class="scene-shade"></div>
+      <span class="scene-index">01 <span class="scene-index-line"></span> THE ARRIVAL</span>
+    </section>
+    <section class="reading-area" aria-label="Begin the story">
+      <div class="welcome-content" id="welcome"><div class="ornament" aria-hidden="true"><span></span>✦<span></span></div><p class="section-label">YOUR STORY AWAITS</p><h2>Every story starts<br>with a name.</h2><p class="welcome-description">Beyond the water, the gates of Varenmoor stand open. What happens next is yours to discover.</p></div>
+      <div class="transcript" id="transcript" role="log" aria-live="polite" aria-relevant="additions" hidden><div class="transcript-heading"><span class="heading-rule"></span><span>THE STORY SO FAR</span><span class="heading-rule"></span></div><div id="entries"></div><div id="loading" class="loading-line" role="status" hidden><span class="loading-dot"></span>The castle is listening…</div><div id="transcript-end"></div></div>
+    </section>
+  </main>
+  <div class="composer-wrap"><div class="composer-inner">
+    <p id="error" class="error-message" role="alert" hidden></p>
+    <div id="ended-controls" class="ended-controls" hidden><span>The story has come to an end.</span><button type="button" id="again" class="story-button">↺ &nbsp; Begin again</button></div>
+    <form id="form" class="composer-form"><div class="composer-input-wrap"><span class="input-flourish" aria-hidden="true">✦</span><input id="text" autocomplete="off" aria-label="Your name (optional)" placeholder="Enter your name (optional)…"><span id="enter-hint" class="enter-hint" hidden>↵ ENTER</span></div><button type="submit" id="go" class="story-button"><span id="go-label">BEGIN STORY</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 12h16m-7-7 7 7-7 7"/></svg></button></form>
+    <div class="composer-footnote"><span>✦</span><span>LET YOUR WORDS LEAD THE WAY</span><span>✦</span></div>
+  </div></div>
+</div>
 <script src="config.js"></script>
 <script>
-const API=(window.VARENMOOR_API||"").replace(/\/$/,""),log=document.getElementById("log"),t=document.getElementById("t"),go=document.getElementById("go");
-let sid=null,busy=false,ended=false;
-function add(cls,text,who){const d=document.createElement("div");d.className="m "+cls;if(who){const w=document.createElement("span");w.className="who";w.textContent=who;d.append(w)}d.append(document.createTextNode(text));log.append(d);log.scrollTop=log.scrollHeight}
-async function call(path,body){const r=await fetch(API+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||r.statusText);return j}
-function show(events){for(const e of events){if(e.kind==="narration")add("n",e.text);else if(e.kind==="say")add("",e.text,e.speaker.toUpperCase());else if(e.kind==="end"){add("sys","— THE END —");ended=true}}}
-document.getElementById("f").onsubmit=async e=>{e.preventDefault();if(busy)return;const text=t.value.trim();
- try{busy=t.disabled=go.disabled=true;
-  if(!sid){add("sys","Waking the castle… (the first request can take ~30s on free hosting)");const r=await call("/api/session",{player:text});sid=r.session_id;t.value="";t.placeholder="Say or do something…";show(r.events)}
-  else if(text){add("you",text,"YOU");t.value="";show((await call(`/api/session/${sid}/message`,{text})).events)}
- }catch(err){add("sys","⚠ "+err.message)}finally{busy=false;if(!ended){t.disabled=go.disabled=false;t.focus()}}};
-</script></body></html>
+(() => {
+  const api = (window.VARENMOOR_API || "").replace(/\/$/, "");
+  const $ = id => document.getElementById(id);
+  const form = $("form"), input = $("text"), go = $("go"), entries = $("entries");
+  let session = null, busy = false, ended = false;
+
+  function update() {
+    const playing = !!session;
+    $("main").classList.toggle("is-playing", playing);
+    $("welcome").hidden = playing;
+    $("transcript").hidden = !playing;
+    $("restart").hidden = !playing;
+    $("ended-controls").hidden = !ended;
+    form.hidden = ended;
+    input.disabled = busy;
+    go.disabled = busy || (playing && !input.value.trim());
+    $("loading").hidden = !busy || !playing;
+    $("go-label").textContent = busy ? "WAITING" : playing ? "SEND" : "BEGIN STORY";
+    input.placeholder = playing ? "What do you say or do?" : "Enter your name (optional)…";
+    input.setAttribute("aria-label", playing ? "What do you say or do?" : "Your name (optional)");
+    $("enter-hint").hidden = !playing;
+    document.querySelector(".reading-area").setAttribute("aria-label", playing ? "Story transcript" : "Begin the story");
+  }
+
+  function append(kind, text, speaker) {
+    const item = document.createElement("div");
+    item.className = "entry entry-" + kind;
+    if (kind === "say" || kind === "you") {
+      const label = document.createElement("div");
+      label.className = "entry-speaker";
+      label.textContent = kind === "you" ? "YOU" : speaker || "";
+      item.append(label);
+    }
+    if (kind === "end") {
+      const finish = document.createElement("div");
+      finish.className = "ending";
+      finish.textContent = "✦  THE END  ✦";
+      item.append(finish);
+      ended = true;
+    } else {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = text || "";
+      item.append(paragraph);
+    }
+    entries.append(item);
+    $("transcript-end").scrollIntoView({ behavior: "smooth", block: "end" });
+  }
+
+  function show(events) {
+    for (const event of events || []) {
+      if (event.kind === "narration" || event.kind === "say" || event.kind === "end") append(event.kind, event.text, event.speaker);
+    }
+    update();
+  }
+
+  async function call(path, body) {
+    const response = await fetch(api + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.detail || "The castle did not answer (" + response.status + ").");
+    return result;
+  }
+
+  function restart() {
+    session = null; busy = false; ended = false;
+    input.value = ""; entries.replaceChildren();
+    $("error").hidden = true;
+    update(); input.focus();
+  }
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (busy || ended) return;
+    const text = input.value.trim();
+    if (session && !text) return;
+    busy = true; $("error").hidden = true; update();
+    try {
+      if (!session) {
+        const result = await call("/api/session", { player: text });
+        session = result.session_id;
+        input.value = "";
+        update(); show(result.events);
+      } else {
+        const result = await call("/api/session/" + encodeURIComponent(session) + "/message", { text });
+        append("you", text);
+        input.value = "";
+        show(result.events);
+      }
+    } catch (error) {
+      $("error").textContent = error.message || "Something went wrong. Please try again.";
+      $("error").hidden = false;
+    } finally {
+      busy = false; update(); if (!ended) input.focus();
+    }
+  });
+  $("restart").addEventListener("click", restart);
+  $("again").addEventListener("click", restart);
+  document.querySelector(".wordmark").addEventListener("click", event => {
+    if (session) { event.preventDefault(); restart(); }
+  });
+  input.addEventListener("input", update);
+  update();
+})();
+</script>
+</body>
+</html>

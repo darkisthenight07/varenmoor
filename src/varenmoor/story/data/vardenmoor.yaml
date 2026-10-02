@@ -17,7 +17,7 @@ stages:
     The air is cold. The walls are stone. Something about this place feels wrong in a way you cannot name yet.
   characters:
   - doctor
-  max_turns: 8
+  max_turns: 3
   beats:
   - id: intro
     by: npc
@@ -55,7 +55,7 @@ stages:
     He greets you with the specific warmth of someone reuniting with a person they know well — even if this is the first time you've met.
   characters:
   - mouse
-  max_turns: 14
+  max_turns: 4
   beats:
   - id: greet
     by: npc
@@ -102,7 +102,6 @@ stages:
 
       Example:
       "Oh, you're here! I was wondering when — well. You're here now. That's the part that matters."
-      "A linked list? Is it a kind of chain? Chains are not very friendly in here."
 - id: checkpoint2
   description: |
     You enter a room where an old woman sits.
@@ -110,7 +109,7 @@ stages:
     She asks you a favour.
   characters:
   - old_woman
-  max_turns: 12
+  max_turns: 4
   beats:
   - id: welcome
     by: npc
@@ -162,7 +161,7 @@ stages:
     When the player touches the painting the floor opens at once and they fall. Narrate the fall as the consequence of the touch.
     The player may study the painting, the gallery and the horns first. Let them. Do not hurry them toward it, but never let the painting feel anything other than deliberate.
   characters: []
-  max_turns: 10
+  max_turns: 5
   beats:
   - id: touch
     by: player
@@ -196,7 +195,7 @@ stages:
     Whatever clinical manner he performed upstairs is gone.
   characters:
   - doctor
-  max_turns: 14
+  max_turns: 5
   beats:
   - id: certainty
     by: npc
@@ -244,7 +243,7 @@ stages:
     She has gone somewhere you cannot reach.
   characters:
   - old_woman
-  max_turns: 16
+  max_turns: 5
   beats:
   - id: cold
     by: npc
@@ -296,7 +295,7 @@ stages:
     Before the loop — even though a loop has no true start — the player was a knight. They had a life, a home, people who remembered them. The King once had this too. The curse of time has made them mirrors of each other, each condemned to the same endless cycle.
   characters:
   - king
-  max_turns: 12
+  max_turns: 5
   beats:
   - id: regard
     by: npc

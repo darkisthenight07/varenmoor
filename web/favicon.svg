@@ -1,0 +1,205 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#171421"/>
+      <stop offset="100%" stop-color="#08090e"/>
+    </linearGradient>
+
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d7c9b2"/>
+      <stop offset="100%" stop-color="#756b65"/>
+    </linearGradient>
+
+    <radialGradient id="moon" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#eee4ce"/>
+      <stop offset="100%" stop-color="#aaa093"/>
+    </radialGradient>
+
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <clipPath id="circle">
+      <circle cx="128" cy="128" r="112"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="128" cy="128" r="120" fill="url(#bg)"/>
+
+  <!-- Arcane outer ring -->
+  <circle
+    cx="128" cy="128" r="111"
+    fill="none"
+    stroke="#8b6f47"
+    stroke-width="3"
+  />
+
+  <circle
+    cx="128" cy="128" r="103"
+    fill="none"
+    stroke="#514533"
+    stroke-width="1.5"
+    stroke-dasharray="2 8"
+  />
+
+  <!-- Crescent moon -->
+  <path
+    d="M171 48
+       A48 48 0 1 0 184 116
+       A38 38 0 1 1 171 48Z"
+    fill="url(#moon)"
+    opacity=".9"
+  />
+
+  <!-- Distant mist -->
+  <path
+    d="M27 177
+       Q64 164 96 177
+       T163 177
+       T229 174
+       L229 218 L27 218Z"
+    fill="#22232c"
+    opacity=".85"
+  />
+
+  <!-- Castle silhouette -->
+  <g fill="url(#stone)" stroke="#403b3d" stroke-width="2">
+
+    <!-- Main keep -->
+    <path d="
+      M76 177
+      L76 103
+      L86 103
+      L86 84
+      L97 84
+      L97 103
+      L113 103
+      L113 72
+      L128 58
+      L143 72
+      L143 103
+      L159 103
+      L159 84
+      L170 84
+      L170 103
+      L180 103
+      L180 177
+      Z"/>
+
+    <!-- Left tower -->
+    <path d="
+      M48 177
+      L48 111
+      L58 111
+      L58 86
+      L68 76
+      L78 86
+      L78 111
+      L86 111
+      L86 177
+      Z"/>
+
+    <!-- Right tower -->
+    <path d="
+      M170 177
+      L170 111
+      L178 111
+      L178 86
+      L188 76
+      L198 86
+      L198 111
+      L208 111
+      L208 177
+      Z"/>
+
+    <!-- Central battlements -->
+    <path d="
+      M105 103
+      L105 91
+      L114 91
+      L114 99
+      L123 99
+      L123 91
+      L132 91
+      L132 99
+      L141 99
+      L141 91
+      L150 91
+      L150 103
+      Z"/>
+  </g>
+
+  <!-- Castle windows -->
+  <g fill="#17131b">
+    <path d="M61 104 Q68 94 75 104 L75 119 L61 119Z"/>
+    <path d="M181 104 Q188 94 195 104 L195 119 L181 119Z"/>
+
+    <path d="M120 82 Q128 70 136 82 L136 101 L120 101Z"/>
+
+    <path d="M93 122 Q99 113 105 122 L105 137 L93 137Z"/>
+    <path d="M151 122 Q157 113 163 122 L163 137 L151 137Z"/>
+  </g>
+
+  <!-- Central cursed eye -->
+  <g filter="url(#glow)">
+    <path
+      d="M105 151 Q128 130 151 151 Q128 172 105 151Z"
+      fill="#111017"
+      stroke="#9b7650"
+      stroke-width="2"
+    />
+
+    <ellipse cx="128" cy="151" rx="8" ry="11" fill="#b78a55"/>
+    <circle cx="128" cy="151" r="4" fill="#0b0a0f"/>
+  </g>
+
+  <!-- Gate -->
+  <path
+    d="M116 177
+       L116 164
+       Q128 148 140 164
+       L140 177Z"
+    fill="#111017"
+    stroke="#3d3839"
+    stroke-width="2"
+  />
+
+  <!-- Foreground ground -->
+  <path
+    d="M31 178 Q76 169 105 181 T171 180 T225 176 L225 211 L31 211Z"
+    fill="#0b0c11"
+  />
+
+  <!-- Arcane marks -->
+  <g
+    fill="none"
+    stroke="#8b6f47"
+    stroke-width="2"
+    opacity=".8"
+  >
+    <path d="M54 202 L61 188 L68 202"/>
+    <path d="M188 202 L195 188 L202 202"/>
+    <circle cx="128" cy="207" r="6"/>
+    <path d="M128 198 L128 216 M119 207 L137 207"/>
+  </g>
+
+  <!-- Small ravens / particles -->
+  <g fill="#09090d">
+    <path d="M45 66 Q51 60 57 66 Q51 64 45 66Z"/>
+    <path d="M199 58 Q205 52 211 58 Q205 56 199 58Z"/>
+  </g>
+
+  <!-- Subtle vignette -->
+  <circle
+    cx="128" cy="128" r="118"
+    fill="none"
+    stroke="#050509"
+    stroke-width="10"
+    opacity=".35"
+  />
+</svg>
