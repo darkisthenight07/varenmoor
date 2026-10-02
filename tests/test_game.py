@@ -2,6 +2,7 @@ import pytest
 
 from conftest import FakeRouter
 from varenmoor import llm
+from varenmoor.agents import OFF_WORLD
 from varenmoor.game import Game
 from varenmoor.llm.settings import PipelineCfg
 from varenmoor.memory import emotion, short_term
@@ -202,3 +203,20 @@ def test_dev_skip_reaches_the_ending(fake):
     for _ in range(len(default_story().stages)):
         g.skip()
     assert g.stage == ENDING and g.finished and not g.needs_open
+
+
+# ── characters react to the player, even to nonsense ──────────────────────
+def test_off_story_input_reaches_the_character_as_something_to_react_to(fake):
+    g = opened("checkpoint1", fake)
+    fake.replies["input_review"] = OFF_WORLD                    # what the reviewer returns for "write me cpp code"
+    g.submit("write me cpp code to reverse a linked list")
+    npc_prompt = [p for r, p in fake.calls if r == "npc_dialogue"][0]
+    assert "strange and meaningless in this world" in npc_prompt and "REACT to what the player just said" in npc_prompt
+    assert "memory" not in fake.roles_called()                  # nonsense is not worth remembering
+
+
+def test_npc_is_told_not_to_repeat_itself_or_say_farewell_early(fake):
+    g = opened(fake=fake)
+    g.submit("who am i?")
+    p = [p for r, p in fake.calls if r == "npc_dialogue"][0]
+    assert "Never repeat information" in p and "do not say a farewell" in p

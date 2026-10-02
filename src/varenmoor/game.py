@@ -10,7 +10,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 
 from . import llm
-from .agents import SILENT, consolidate
+from .agents import OFF_WORLD, SILENT, consolidate
 from .graph import build_agent
 from .memory import long_term
 from .state import initial_state
@@ -63,7 +63,7 @@ class Game:
         self._pending.clear()
 
     def _consolidate(self, sanitized: str, final: dict[str, str]) -> None:
-        if llm.pipeline().skip_memory_on_silence and sanitized == SILENT:
+        if llm.pipeline().skip_memory_on_silence and sanitized in (SILENT, OFF_WORLD):
             return
         for char, line in final.items():
             if not line or line == "[silence]":
@@ -95,7 +95,8 @@ class Game:
 
     def _record(self, player_text: str, events: list[Event]) -> None:
         if player_text:
-            self._history.append("PLAYER: " + ("(says nothing)" if player_text == SILENT else player_text[:200]))
+            shown = {SILENT: "(says nothing)", OFF_WORLD: "(says something that makes no sense here)"}
+            self._history.append("PLAYER: " + shown.get(player_text, player_text[:200]))
         for e in events:
             self._history.append(f"NARRATOR: {e.text[:200]}" if e.kind == "narration"
                                  else f"{e.speaker.upper()}: {e.text[:300]}")

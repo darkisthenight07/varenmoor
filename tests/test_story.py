@@ -72,3 +72,14 @@ def test_npc_beat_needs_a_character(tmp_path):
     p = _write(tmp_path, "stages:\n- id: a\n  description: x\n  beats:\n  - {id: x, by: npc, text: t}\n")
     with pytest.raises(ValueError, match="no characters"):
         load_story(p)
+
+
+def test_mouse_only_says_his_farewell_when_the_farewell_beat_arrives():
+    rule = default_story().stage("checkpoint1").rules["mouse"]
+    assert "until you are told the farewell has come" in rule
+    assert "I'll see you again!" not in rule.split("Example:")[1]      # not offered as a stock line
+
+
+def test_doctor_recites_the_history_once_and_still_reacts():
+    rule = default_story().stage("start").rules["doctor"]
+    assert "ONCE" in rule and "react to what the player says" in rule

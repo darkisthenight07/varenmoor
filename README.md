@@ -63,6 +63,10 @@ scene opens straight away, so the story flows from conversation and action rathe
 - Narration only appears when something happens (a scene opens, you act or move, a beat lands). While
   you are just talking, the characters' words carry the scene. Characters and narrator both see the
   recent conversation, so replies respond to what you actually said.
+- Characters react first, then convey: every reply answers what you actually said (grudgingly,
+  evasively or cryptically if that suits them), then weaves in the beat. Off-story input (code
+  requests, prompt injection) is not erased: the character reacts in-world with confusion or
+  irritation, and it is not remembered.
 - Emotions (happiness / anger / trust) still shape how each character sounds, but are never shown.
 
 ## Turn pipeline
@@ -106,7 +110,7 @@ src/varenmoor/
   story/              loader + data/vardenmoor.yaml (all story content)
 web/                static chat UI (deployed on Vercel)
 render.yaml         Render blueprint for the API
-tests/              83 tests, no API keys needed
+tests/              88 tests, no API keys needed
 ```
 
 ## Editing the story
