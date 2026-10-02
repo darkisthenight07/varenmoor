@@ -6,7 +6,7 @@ from varenmoor.memory import emotion, long_term, short_term
 
 DEFAULT_REPLIES = {
     "input_review": "I look around the room.",
-    "narrator": "NARRATION: Cold stone surrounds you.\nADVANCE: no\nCHAR: doctor\nPROMPT: Be curt and dismissive.",
+    "narrator": "NARRATION: Cold stone surrounds you.\nBEAT_DONE: no\nCHAR: doctor\nPROMPT: Be curt and dismissive.",
     "npc_dialogue": "You are not the first to wake here.",
     "output_review": "Leave this room.",
     "memory": ('```json\n{"emotion": {"happiness": 1, "anger": 9, "trust": -2}, "short": "Player looked around.", '

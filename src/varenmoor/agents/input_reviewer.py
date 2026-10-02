@@ -47,6 +47,8 @@ def clean_basic(text: str) -> str:
 
 
 def input_reviewer_node(state: AgentState) -> dict:
+    if state.get("opening"):  # a scene opening has no player input to review
+        return {"sanitized_input": ""}
     text = clean_basic(state["player_input"])
     mode = llm.pipeline().input_review
     if not text or INJECTION.search(text):

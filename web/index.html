@@ -17,25 +17,17 @@ button{padding:10px 16px;background:var(--acc);color:#fff;border:0;border-radius
 <header>Varenmoor</header>
 <div id="log"></div>
 <form id="f"><input id="t" autocomplete="off" placeholder="Your name to begin (or leave blank)…" autofocus>
-<button id="go">Enter</button><button id="nx" type="button" style="display:none;background:var(--card);color:var(--fg)">Next scene</button></form>
+<button id="go">Enter</button></form>
 <script src="config.js"></script>
 <script>
-const API=(window.VARENMOOR_API||"").replace(/\/$/,""),log=document.getElementById("log"),t=document.getElementById("t"),go=document.getElementById("go"),nx=document.getElementById("nx");
-let sid=null,busy=false,narrOnly=false;
+const API=(window.VARENMOOR_API||"").replace(/\/$/,""),log=document.getElementById("log"),t=document.getElementById("t"),go=document.getElementById("go");
+let sid=null,busy=false,ended=false;
 function add(cls,text,who){const d=document.createElement("div");d.className="m "+cls;if(who){const w=document.createElement("span");w.className="who";w.textContent=who;d.append(w)}d.append(document.createTextNode(text));log.append(d);log.scrollTop=log.scrollHeight}
 async function call(path,body){const r=await fetch(API+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||r.statusText);return j}
-function scene(s){if(s.finished){add("sys","— THE END —");t.disabled=go.disabled=true;nx.style.display="none";return}
- add("stage","STAGE: "+s.stage.toUpperCase()+"\n\n"+s.description);narrOnly=!s.characters.length;
- if(s.narration)add("n",s.narration,"NARRATOR");
- t.style.display=narrOnly?"none":"";go.style.display=narrOnly?"none":"";nx.style.display="";nx.textContent=narrOnly?"Continue":"Skip scene"}
-function setBusy(b){busy=b;t.disabled=go.disabled=nx.disabled=b}
+function show(events){for(const e of events){if(e.kind==="narration")add("n",e.text);else if(e.kind==="say")add("",e.text,e.speaker.toUpperCase());else if(e.kind==="end"){add("sys","— THE END —");ended=true}}}
 document.getElementById("f").onsubmit=async e=>{e.preventDefault();if(busy)return;const text=t.value.trim();
- try{setBusy(true);
-  if(!sid){add("sys","Waking the castle… (the first request can take ~30s on free hosting)");const r=await call("/api/session",{player:text});sid=r.session_id;t.value="";t.placeholder="Say or do something…";scene(r.scene)}
-  else if(text){add("you",text,"YOU");t.value="";const r=await call(`/api/session/${sid}/message`,{text});
-   if(r.narration)add("n",r.narration,"NARRATOR");for(const[c,l]of Object.entries(r.responses))add("",l,c.toUpperCase());
-   for(const[c,e]of Object.entries(r.emotions||{}))add("sys",`${c}: happiness ${e.happiness} · anger ${e.anger} · trust ${e.trust}`);
-   if(r.scene){add("sys","The scene shifts…");scene(r.scene)}}
- }catch(err){add("sys","⚠ "+err.message)}finally{setBusy(false);t.focus()}};
-nx.onclick=async()=>{if(busy||!sid)return;try{setBusy(true);scene((await call(`/api/session/${sid}/next`)).scene)}catch(err){add("sys","⚠ "+err.message)}finally{setBusy(false)}};
+ try{busy=t.disabled=go.disabled=true;
+  if(!sid){add("sys","Waking the castle… (the first request can take ~30s on free hosting)");const r=await call("/api/session",{player:text});sid=r.session_id;t.value="";t.placeholder="Say or do something…";show(r.events)}
+  else if(text){add("you",text,"YOU");t.value="";show((await call(`/api/session/${sid}/message`,{text})).events)}
+ }catch(err){add("sys","⚠ "+err.message)}finally{busy=false;if(!ended){t.disabled=go.disabled=false;t.focus()}}};
 </script></body></html>

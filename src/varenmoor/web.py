@@ -13,7 +13,6 @@ from pydantic import BaseModel, Field
 
 from . import llm
 from .game import Game
-from .memory import get_emotions
 from .story import default_story
 
 MAX_SESSIONS = int(os.getenv("MAX_SESSIONS", "200"))
@@ -52,19 +51,8 @@ def _get(sid: str) -> dict:
     return s
 
 
-def _scene(game: Game) -> dict:
-    """Describe the current stage (narrating it when it has no characters)."""
-    if game.finished:
-        return {"stage": "ending", "finished": True, "description": "", "characters": [], "narration": ""}
-    stage = game.story.stage(game.stage)
-    narration = ""
-    if not stage.characters:
-        try:
-            narration = game.narrate_current_stage()
-        except llm.AllModelsFailed:
-            narration = "The castle is silent."
-    return {"stage": stage.id, "finished": False, "description": stage.description,
-            "characters": list(stage.characters), "narration": narration}
+def _wire(events) -> list[dict]:
+    return [{"kind": e.kind, "text": e.text, "speaker": e.speaker.replace("_", " ")} for e in events]
 
 
 @app.get("/api/health")
@@ -74,42 +62,30 @@ def health() -> dict:
 
 @app.post("/api/session")
 def new_session(body: NewSession) -> dict:
-    router = llm.get_router()
-    problems = router.validate()
+    problems = llm.get_router().validate()
     if problems:
         raise HTTPException(503, "Server not configured: " + "; ".join(problems))
     pid = re.sub(r"[^a-z0-9_-]", "_", body.player.lower())[:32] or uuid.uuid4().hex[:8]
     sid = uuid.uuid4().hex
+    game = Game(pid, story=default_story())
     with _lock:
         _purge()
-        game = Game(pid, story=default_story())
         _sessions[sid] = {"game": game, "seen": time.time(), "lock": threading.Lock()}
-    return {"session_id": sid, "title": game.story.title, "scene": _scene(game)}
+    try:
+        events = game.start()
+    except llm.AllModelsFailed as exc:
+        _sessions.pop(sid, None)
+        raise HTTPException(503, f"The castle is not answering yet. Try again shortly. ({exc})")
+    return {"session_id": sid, "title": game.story.title, "events": _wire(events)}
 
 
 @app.post("/api/session/{sid}/message")
 def message(sid: str, body: Message) -> dict:
     s = _get(sid)
     game: Game = s["game"]
-    if game.finished:
-        raise HTTPException(409, "Game finished")
     with s["lock"]:
         try:
-            r = game.submit(body.text.strip())
+            events = game.submit(body.text.strip())
         except llm.AllModelsFailed as exc:
             raise HTTPException(503, f"The castle falls silent. Try again shortly. ({exc})")
-        chars = game.story.stage(r.stage).characters
-        out = {"narration": r.narration if r.show_narration else "", "responses": r.responses,
-               "advanced": r.advanced, "emotions": {}}
-        if not r.advanced and game.turn % 3 == 0:
-            out["emotions"] = {c: get_emotions(game.player_id, c) for c in chars}
-        out["scene"] = _scene(game) if r.advanced else None
-    return out
-
-
-@app.post("/api/session/{sid}/next")
-def next_stage(sid: str) -> dict:
-    s = _get(sid)
-    with s["lock"]:
-        s["game"].skip()
-        return {"scene": _scene(s["game"])}
+    return {"events": _wire(events), "finished": game.finished}

@@ -28,7 +28,11 @@ def build_agent(story: Story | None = None):
     g.add_edge("input_reviewer", "scene")
 
     def route(state: AgentState) -> list[str]:
-        return [_node(c) for c in story.stage(state["stage"]).characters] or ["output_reviewer"]
+        stage = story.stage(state["stage"])
+        # A scene whose last beat the player just completed ends without another NPC line.
+        if stage.beats and state.get("beat_idx", 0) >= len(stage.beats):
+            return ["output_reviewer"]
+        return [_node(c) for c in stage.characters] or ["output_reviewer"]
 
     g.add_conditional_edges("scene", route,
                             {_node(c): _node(c) for c in story.characters} | {"output_reviewer": "output_reviewer"})

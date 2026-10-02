@@ -23,6 +23,16 @@ def test_parse_scene_multiline_and_casing_and_advance_yes():
     assert n == "Line one. Line two." and adv is True and p == {"mouse": "Be warm. But cryptic."}
 
 
+def test_parse_scene_beat_done_and_none_narration():
+    n, done, p = parse_scene("NARRATION: none\nBEAT_DONE: yes\nCHAR: mouse\nPROMPT: Smile.")
+    assert (n, done, p) == ("", True, {"mouse": "Smile."})
+
+
+def test_input_reviewer_skips_openings(fake):
+    assert input_reviewer_node({"stage": "start", "player_input": "", "opening": True}) == {"sanitized_input": ""}
+    assert fake.calls == []
+
+
 def test_parse_scene_unlabeled_narration_is_kept():
     n, adv, p = parse_scene("The walls weep.\nADVANCE: yes")
     assert n == "The walls weep." and adv is True and p == {}

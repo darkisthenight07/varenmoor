@@ -7,16 +7,17 @@ import os
 import re
 import shutil
 import sys
+import textwrap
 import uuid
 from pathlib import Path
 
 from . import llm
 from .config import PACKAGED_MODELS
-from .game import Game
-from .memory import get_emotions
-from .story import default_story
+from .game import Event, Game
 
 BANNER = "=" * 50
+_COLOR = sys.stdout.isatty() and not os.getenv("NO_COLOR")
+_DIM, _BOLD, _OFF = ("\033[3;90m", "\033[1m", "\033[0m") if _COLOR else ("", "", "")
 
 
 def _player_id() -> str:
@@ -31,19 +32,24 @@ def _player_id() -> str:
     return pid
 
 
-def _stage_header(stage_id: str) -> None:
-    print(f"\n{'─' * 50}\n  STAGE: {stage_id.upper()}\n{'─' * 50}")
-    print(f"\n{default_story().stage(stage_id).description}\n")
+def _display_name(char: str) -> str:
+    return "The " + char.replace("_", " ").title() if char != "doctor" else "The Doctor"
 
 
-def _emotion_summary(pid: str, chars) -> None:
-    print("\n  [Emotional State]")
-    for c in chars:
-        e = get_emotions(pid, c)
-        print(f"  {c}: happiness={e['happiness']} anger={e['anger']} trust={e['trust']}")
+def show(events: list[Event]) -> None:
+    """Print what the player sees: narration in dim italics, then each character's line."""
+    width = min(shutil.get_terminal_size((80, 20)).columns, 88) - 2
+    for e in events:
+        if e.kind == "narration":
+            print("\n" + _DIM + textwrap.fill(e.text, width) + _OFF)
+        elif e.kind == "say":
+            print(f"\n{_BOLD}{_display_name(e.speaker)}:{_OFF} " + textwrap.fill(
+                e.text, width, subsequent_indent="  "))
+        elif e.kind == "end":
+            print(f"\n{BANNER}\n  THE END\n{BANNER}")
 
 
-def run_game(show_stats: bool = False) -> None:
+def run_game(show_stats: bool = False, dev: bool = False) -> None:
     router = llm.get_router()
     problems = router.validate()
     if problems:
@@ -53,52 +59,35 @@ def run_game(show_stats: bool = False) -> None:
 
     game = Game(_player_id())
     print(BANNER)
-    print("Type 'next' to advance stage, 'exit' to quit.\n")
+    print("Say or do whatever you like. The story moves on as you talk and act.")
+    print("Type 'exit' to quit." + ("  [dev: '/skip' jumps to the next scene]" if dev else "") + "\n" + BANNER)
     try:
         while not game.finished:
-            stage = game.story.stage(game.stage)
-            _stage_header(stage.id)
-
-            if not stage.characters:  # pure narration stage
-                try:
-                    print(f"\n[NARRATOR]: {game.narrate_current_stage()}\n")
-                except llm.AllModelsFailed as exc:
-                    print(f"\n[The castle is silent. {exc}]\n")
-                input("\nPress Enter to continue...")
+            try:
+                if game.needs_open:
+                    show(game.start())
+                    continue
+            except llm.AllModelsFailed as exc:
+                print(f"\n[The castle stirs slowly. Press Enter to try again.]\n  ({exc})")
+                input()
+                continue
+            text = input("\n> ").strip()
+            if not text:
+                continue
+            if text.lower() in ("exit", "quit"):
+                print("\nGame ended.")
+                return
+            if dev and text.lower() == "/skip":
                 game.skip()
                 continue
-
-            while True:
-                text = input("\nYOU: ").strip()
-                if not text:
-                    continue
-                if text.lower() == "exit":
-                    print("\nGame ended.")
-                    return
-                if text.lower() == "next":
-                    game.skip()
-                    break
-                try:
-                    result = game.submit(text)
-                except llm.AllModelsFailed as exc:
-                    print(f"\n[The castle falls silent. Try again in a moment.]\n  ({exc})")
-                    continue
-
-                if result.show_narration:
-                    print(f"\n[NARRATOR]: {result.narration}\n")
-                for char, line in result.responses.items():
-                    print(f"\n[{char.upper()}]: {line}")
-                if result.advanced:
-                    print("\n[The scene shifts…]\n")
-                    break
-                if game.turn % 3 == 0:
-                    _emotion_summary(game.player_id, stage.characters)
+            try:
+                show(game.submit(text))
+            except llm.AllModelsFailed as exc:
+                print(f"\n[The castle falls silent. Try again in a moment.]\n  ({exc})")
     finally:
         game.close()
         if show_stats:
             print("\n" + router.stats())
-
-    print(f"\n{BANNER}\n  THE END\n{BANNER}")
 
 
 def _init_config(dest: str) -> int:
@@ -116,6 +105,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("-v", "--verbose", action="store_true", help="log model fallbacks and failures")
     parser.add_argument("--models", metavar="FILE", help="use this models.yaml instead of ./models.yaml")
     parser.add_argument("--stats", action="store_true", help="print LLM call counts when the game ends")
+    parser.add_argument("--dev", action="store_true", help="enable developer commands (/skip)")
     sub = parser.add_subparsers(dest="cmd")
     p_models = sub.add_parser("models", help="show role -> model wiring and check API keys")
     p_models.add_argument("--ping", action="store_true", help="send a tiny request to every configured model")
@@ -134,7 +124,7 @@ def main(argv: list[str] | None = None) -> None:
         if args.cmd == "models":
             from .diagnostics import show_models
             sys.exit(show_models(ping=args.ping))
-        run_game(show_stats=args.stats)
+        run_game(show_stats=args.stats, dev=args.dev)
     except llm.ConfigError as exc:
         sys.exit(f"Config error: {exc}")
     except (KeyboardInterrupt, EOFError):

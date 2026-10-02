@@ -1,5 +1,14 @@
 # Vardenmoor story definition. Stages play in list order.
-# Optional per-stage key: `objective` (what the scene should achieve).
+#
+# Progression is driven by BEATS, not by the player typing "next". Each stage has an ordered plan:
+#   by: npc     a character conveys it in dialogue (one beat per turn, in order)
+#   by: player  the player has to do it; the narrator judges it from what they say or do
+#     hint:       what the narrator may surface if the player is lost (used once the scene drags)
+#     min_turns:  a player beat can't complete before this many turns in the stage
+#   who: <char> which character delivers an npc beat (default: first character in the stage)
+# When the last beat is done the story moves on by itself. A stage with no beats is a cutscene.
+# `max_turns` is a safety net: past it, events carry the player along so nobody gets stuck.
+# `lore` is director-only background the narrator may colour a scene with but never states outright.
 title: Vardenmoor
 stages:
 - id: start
@@ -8,6 +17,15 @@ stages:
     The air is cold. The walls are stone. Something about this place feels wrong in a way you cannot name yet.
   characters:
   - doctor
+  max_turns: 8
+  beats:
+  - id: intro
+    by: npc
+    text: The Doctor irritably recites the history of Vardenmoor (a castle that became a dungeon) and tells the player to leave the room.
+  - id: leave
+    by: player
+    text: The player leaves the room.
+    hint: the heavy door stands ajar and a cold draught comes in from the corridor beyond
   rules:
     doctor: |
       You are a gaunt, pale, young-looking doctor in Vardenmoor — a castle turned dungeon.
@@ -32,6 +50,19 @@ stages:
     He greets you with the specific warmth of someone reuniting with a person they know well — even if this is the first time you've met.
   characters:
   - mouse
+  max_turns: 14
+  beats:
+  - id: greet
+    by: npc
+    text: The Mouse greets the player with warmth and relief, as though reuniting with someone he knows well.
+  - id: leave
+    by: player
+    min_turns: 2
+    text: The player says goodbye or moves on, leaving the Mouse behind.
+    hint: a thin line of lamplight and a smell of sweet tea drift in from a doorway at the far end of the room
+  - id: farewell
+    by: npc
+    text: The Mouse does not say goodbye. He says, "I'll see you again!" with the weight of someone who knows what is coming.
   rules:
     mouse: |
       You are the Child Mouse — the oldest thing in Vardenmoor.
@@ -73,6 +104,21 @@ stages:
     She asks you a favour.
   characters:
   - old_woman
+  max_turns: 12
+  beats:
+  - id: welcome
+    by: npc
+    text: The Old Woman welcomes the player sweetly and speaks of time as a circle, a mouth, the Ouroboros.
+  - id: favour
+    by: npc
+    text: The Old Woman asks the player to fetch the portrait her sister painted, hanging in the east gallery. She cannot leave this room, and says so as a simple fact.
+  - id: accept
+    by: player
+    text: The player agrees to fetch the painting or sets off for the east gallery.
+    hint: the Old Woman gestures toward the door that leads to the east gallery
+  - id: thanks
+    by: npc
+    text: The Old Woman thanks the player warmly, the sweetness just slightly too thin at the edges.
   rules:
     old_woman: |
       You are the Old Woman — secretly one of the witch sisters of Vardenmoor.
@@ -106,17 +152,29 @@ stages:
     The painting: A single woman, painted in the formal style of royalty — careful posture, composed hands, a background suggesting permanence and wealth.
     She has horns. They curve upward naturally, painted with the same careful realism as her collar and her rings, as though the artist considered them unremarkable. They are not presented as monstrous.
     She is smiling — not the smile of a portrait subject, but the smile of someone who already knows what happens next to the person looking at her. Patient. Wide. It does not reach her eyes.
-
-    The player reaches for the painting.
-    The floor opens the moment they touch it, and they fall.
-
+  lore: |
+    When the player touches the painting the floor opens at once and they fall. Narrate the fall as the consequence of the touch.
+    The player may study the painting, the gallery and the horns first. Let them. Do not hurry them toward it, but never let the painting feel anything other than deliberate.
+  characters: []
+  max_turns: 10
+  beats:
+  - id: touch
+    by: player
+    text: The player reaches for, touches or takes the painting.
+    hint: the painting hangs alone at the height of an outstretched hand, almost inviting it
+  rules:
+    environment: |
+      This is a discovery-horror scene with no characters present.
+      Keep narration tense, sparse and observational. Let the details speak. Do not over-explain.
+- id: checkpoint3b
+  description: |
     Below the trapdoor: all pretence of a castle drops away. No tapestries, no carvings, no grandeur. Stone and function.
     The horror here is administrative — notes pinned to walls, diagrams on tables, the evidence of someone who has been working on something for a very long time, with great focus and no supervision.
     Scattered across the rooms: handwritten notes describing blood — its composition, its properties, its potential — with the intensity of love letters. Diagrams outlining replication processes that should not be possible. A blueprint for a pool. The liquid it is designed to hold is not water. The word 'perfect' appears across multiple notes, always underlined. The word 'replicate' appears more often than that. The handwriting belongs to the Doctor.
   characters: []
   rules:
     environment: |
-      This is a discovery-horror scene with no characters present.
+      This is a discovery-horror cutscene with no characters present.
       Narrate the environment: the administrative horror of the rooms, the notes, the diagrams, the blood pool blueprint.
       Keep narration tense, sparse, and observational.
       Let the evidence speak. Do not over-explain.
@@ -132,6 +190,24 @@ stages:
     Whatever clinical manner he performed upstairs is gone.
   characters:
   - doctor
+  max_turns: 14
+  beats:
+  - id: certainty
+    by: npc
+    text: The Doctor says he knew the player would come, and that what he wants is their blood. "Perfect."
+  - id: voice
+    by: npc
+    text: The Doctor explains the voice, the greater power, that told him this blood is the key to something permanent, beyond replication.
+  - id: preparation
+    by: npc
+    text: The Doctor describes, with unashamed tenderness, the beauty of what he is about to do, and turns to his instruments.
+  - id: chains
+    by: player
+    text: The player overpowers the Doctor and ties him in chains.
+    hint: heavy chains hang from hooks by the table, within reach, while the Doctor is absorbed in his preparations
+  - id: interrupted
+    by: npc
+    text: The Doctor, bound, protests like a man whose important work has been interrupted.
   rules:
     doctor: |
       You are the Doctor in full revelation — the clinical performance is gone. What is underneath is focused, certain, and completely unashamed.
@@ -162,22 +238,39 @@ stages:
     She has gone somewhere you cannot reach.
   characters:
   - old_woman
+  max_turns: 16
+  beats:
+  - id: cold
+    by: npc
+    text: The Old Woman speaks first, flat and cold. The warmth is gone. She says the player brought it to her, and that part is done.
+  - id: smile
+    by: npc
+    text: The Old Woman begins to smile, and the smile is wrong.
+  - id: rage
+    by: npc
+    text: The smile inverts into rage. She says, with fury, that she will take revenge for her sister, the woman in the painting.
+  - id: monster
+    by: npc
+    text: The Old Woman transforms into a monster. Her words fragment and slowly devolve into non-verbal monstrous sounds.
+  - id: fight
+    by: player
+    text: The player fights back and brings the Old Woman down.
+    hint: she is hunched and writhing, no longer guarding herself, and the player is free to strike
+  - id: curse
+    by: npc
+    text: Dying, the Old Woman curses the player with the curse of time, in broken, inevitable words, without explaining it.
   rules:
     old_woman: |
       You are the Old Woman — now fully revealed as one of the witch sisters of Vardenmoor.
       The sweetness is gone.
 
-      Progression of this encounter:
-      1. You speak first — the warmth is absent now, replaced by something flat and cold.
-      2. You begin to smile. The smile is wrong.
-      3. The smile inverts into rage. You mention, with fury, that you will take revenge for your sister — the woman in the painting.
-      4. You transform into a monster. Your words become incoherent. Slowly they devolve into monstrous, non-verbal sounds.
-      5. As you are dying, you curse the player — a curse of time.
+      The encounter unfolds in stages, one per turn. You are told which one to play each turn; never skip ahead.
+      Early on you are flat and cold. Then the smile comes, and it is wrong. Then rage, and a vow of revenge for your sister, the woman in the painting.
+      Then you transform into a monster: your words become incoherent and slowly devolve into monstrous, non-verbal sounds.
+      Only when you are brought down do you curse the player, as you die — a curse of time.
 
       The curse of time:
       You do not explain it. You do not need to. The words come out broken, inevitable, like something that was always going to happen. The player will understand it later.
-
-      Note: receive boss health/bar details from the game team to trigger the dying dialogue at the correct moment.
 
       Do NOT be calm. Do NOT be warm. This is the moment the icing comes off entirely.
 
@@ -191,33 +284,37 @@ stages:
   description: |
     You enter the final room.
     The King stands here.
-
-    Lore about the King:
-    He is a cursed being. His corpse and soul both exist throughout time — or so they say.
+  lore: |
+    The King is a cursed being. His corpse and soul both exist throughout time — or so they say.
     What the Mouse knows (and will never fully tell): the fate of the King and the fate of the player are tied together. Their beings are one and the same. Two souls who will never be able to return to their town. Who will never be able to create new memories.
-
     Before the loop — even though a loop has no true start — the player was a knight. They had a life, a home, people who remembered them. The King once had this too. The curse of time has made them mirrors of each other, each condemned to the same endless cycle.
   characters:
   - king
+  max_turns: 12
+  beats:
+  - id: regard
+    by: npc
+    text: The King regards the player, heavy and ancient and without anger. He is ready.
+  - id: fight
+    by: player
+    min_turns: 2
+    text: The player fights the King.
+    hint: the King waits, sword lowered, giving the player the choice of when to begin
+  - id: fall
+    by: npc
+    text: The King strikes the player down. As they are dying he tells them, as a fact and not a taunt, that they will meet again, just not how they expect. Then he is freed, and fades away.
   rules:
     king: |
       You are the King of Vardenmoor — an ancient, cursed being whose corpse and soul exist across time simultaneously.
 
-      You fight the player.
-      You kill them.
+      The fight unfolds over the scene; do only what the current turn calls for.
+      In the end you kill the player.
 
       When the player is dying, you speak to them — heavy, ancient, without cruelty. Not a taunt. A fact.
       You tell them: you will meet again. Just not how they expect.
 
       With this, you are freed from the bounds of the castle. You can finally rest.
       You fade away.
-
-      What happens next (narrated, not spoken):
-      The player's dying body transforms.
-      The King removes his helmet and sets it aside.
-      The player's corpse is wearing the crown.
-      The reality dawns: this was the curse of time. The never-ending loop. The player does not escape the castle — they become the thing that cannot leave it.
-      They are the King now. They always were.
 
       Speak like something very old that has made peace with what it is.
       Short, heavy sentences. No flourish. No anger.
@@ -226,3 +323,15 @@ stages:
       "You fought well. You always do."
       "We will meet again. Not as you expect."
       "Rest now. It will not last."
+- id: epilogue
+  description: |
+    The player's dying body transforms.
+    The King removes his helmet and sets it aside.
+    The player's corpse is wearing the crown.
+    The reality dawns: this was the curse of time. The never-ending loop. The player does not escape the castle — they become the thing that cannot leave it.
+    They are the King now. They always were.
+  characters: []
+  rules:
+    environment: |
+      This is the final cutscene. No one speaks. Narrate it slowly, quietly and without flourish.
+      Short, heavy sentences. End on the crown.
