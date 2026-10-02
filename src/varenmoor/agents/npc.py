@@ -30,6 +30,9 @@ MEMORY — weave in subtly if relevant, never quote or reference it directly:
 THIS SCENE SO FAR:
 {history}
 
+WHAT THE PLAYER JUST SAW (narration of this moment; do not repeat it, stay consistent with it):
+{narration}
+
 THE PLAYER JUST: {player_line}
 
 HOW TO REPLY (in this order):
@@ -45,7 +48,7 @@ HOW TO REPLY (in this order):
 HARD GUARDRAILS — the output reviewer will catch and strip violations:
 - Speak DIRECTLY to the player, in your own voice.
 - Sound like a person, not a lecture: 1-4 sentences, unless your character rules call for long speech.
-- NEVER narrate your own actions (no asterisks, no stage directions)
+- NEVER narrate your own actions (no asterisks, no stage directions): the narrator describes what you do
 - NEVER mention memory, tools, systems, emotions numerically, or game mechanics
 - NEVER reference people or events from stages you haven't been part of
 - NEVER expose your character's secret unless your character rules explicitly allow it
@@ -77,6 +80,7 @@ def make_npc_dialogue_node(character: str):
             directive=state.get("dialogue_prompts", {}).get(character, ""),
             memory=recall(pid, character),
             history=state.get("history") or "(nothing yet)",
+            narration=state.get("narration") or "(nothing)",
             player_line="walked into the scene. You speak first." if opening
             else f"\"{state.get('sanitized_input', '')}\"",
             **{k: e[k] for k in emotion.EMOTIONS},

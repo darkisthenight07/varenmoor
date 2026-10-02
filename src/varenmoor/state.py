@@ -17,6 +17,7 @@ class AgentState(TypedDict, total=False):
     turns_in_stage: int                         # player turns already played in this stage
     narration: str
     beat_done: bool                             # the player completed the current player beat this turn
+    skip_npc: bool                              # the narrator delivered a beat alone: nobody speaks this turn
     dialogue_prompts: dict[str, str]            # char -> director's directive
     npc_responses: Annotated[dict, operator.or_]  # char -> raw line (merged across parallel NPCs)
     delivered: Annotated[bool, operator.or_]    # an NPC conveyed the current npc beat this turn
@@ -38,6 +39,7 @@ def initial_state(player_id: str, stage: str, player_input: str, *, opening: boo
         "turns_in_stage": turns_in_stage,
         "narration": "",
         "beat_done": False,
+        "skip_npc": False,
         "dialogue_prompts": {},
         "npc_responses": {},
         "delivered": False,

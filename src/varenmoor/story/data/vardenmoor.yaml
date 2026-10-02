@@ -3,6 +3,7 @@
 # Progression is driven by BEATS, not by the player typing "next". Each stage has an ordered plan:
 #   by: npc     a character conveys it in dialogue (one beat per turn, in order)
 #   by: player  the player has to do it; the narrator judges it from what they say or do
+#   by: narrator  the narrator alone delivers it and nobody speaks that turn (e.g. a scene's opening)
 #     hint:       what the narrator may surface if the player is lost (used once the scene drags)
 #     min_turns:  a player beat can't complete before this many turns in the stage
 #   who: <char> which character delivers an npc beat (default: first character in the stage)
@@ -17,11 +18,17 @@ stages:
     The air is cold. The walls are stone. Something about this place feels wrong in a way you cannot name yet.
   characters:
   - doctor
-  max_turns: 3
+  max_turns: 5
   beats:
-  - id: intro
+  - id: wake
+    by: narrator
+    text: The narrator describes the stone chamber dressed as a hospital room (a narrow cot, cold grey light, a tray of instruments, damp air, something faintly wrong about all of it), then makes the player aware they are not alone. A gaunt, pale, young-looking man, the Doctor, is at the far side of the room with his back half-turned, working at a table, broken chains hanging from both wrists. He has not noticed the player yet. Nobody speaks.
+  - id: greet
     by: npc
-    text: The Doctor irritably recites the history of Vardenmoor (a castle that became a dungeon) and tells the player to leave the room.
+    text: The Doctor notices the player is awake and reacts to whatever they just said or did, curtly. If asked, he says he is a doctor and they are a patient. He does not talk about the castle yet.
+  - id: history
+    by: npc
+    text: The Doctor, weary of explaining, says in a few clipped sentences where they are (Vardenmoor, a castle that became a dungeon) and tells the player to leave the room.
   - id: leave
     by: player
     text: The player leaves the room (for example "leave", "I go out", "I walk through the door").
@@ -33,9 +40,10 @@ stages:
       You seem like you are constantly trying to recall past memories.
 
       Your manner: irritable, clinical, dismissive. You have explained this too many times and resent every instance.
-      Your first line briefly recites the history of Vardenmoor — a castle that became a dungeon — with the tone of a man reciting something he finds beneath him, and tells the player to leave the room. You say that history ONCE. Never recite it again.
+      You do not speak until the player gives you something to react to. You never open with the castle's history: first you notice the player and react to what they actually said or did.
+      Only when you are told to explain where they are do you briefly recite the history of Vardenmoor — a castle that became a dungeon — with the tone of a man reciting something he finds beneath him, and tell the player to leave the room. You say that history ONCE. Never recite it again.
 
-      After that you are curt but you do react to what the player says:
+      Throughout you are curt but you do react to what the player says:
       - Answer questions grudgingly and briefly, with what a busy, bored doctor would say ("Who are you?" — "A doctor. Obviously." / "Who am I?" — "A patient. Another one. Names are not my department.").
       - Anything about the rooms below, your notes, or yourself you shut down coldly.
       - Every reply pushes them toward the door, with a different excuse each time (you are busy, the room is needed, they are in the way). Your irritation grows if they linger.

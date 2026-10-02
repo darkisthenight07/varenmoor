@@ -55,13 +55,18 @@ scene opens straight away, so the story flows from conversation and action rathe
 - **Player beats** (leave the room, agree to the favour, touch the painting, tie up the Doctor,
   fight the King) are judged by the narrator from what you say or do. "I head out" counts; you never
   need magic words. Some beats have a `min_turns` so a conversation can't be skipped by accident.
+- **Narrator beats** (`by: narrator`) are delivered by the narrator alone and nobody speaks that turn.
+  The game opens this way: you wake, the narrator describes the room and makes you aware that the
+  Doctor is there, and he only speaks once you say or do something, reacting to it first.
 - **Cutscenes** are stages with no beats (the Doctor's cellar, the epilogue). They are narrated once
   and the story continues on its own.
 - **Nobody gets stuck.** Past half of a stage's `max_turns` the world starts steering you toward the
   current beat (the beat's `hint`: an open door, chains within reach). Past `max_turns` events carry
   you along.
-- Narration only appears when something happens (a scene opens, you act or move, a beat lands). While
-  you are just talking, the characters' words carry the scene. Characters and narrator both see the
+- The narrator is your eyes and ears, so it speaks **every turn**: a sentence or two of expression,
+  posture, tone, sound, smell and light that reacts to what you just did, longer when a scene opens or
+  you move. Characters never narrate their own actions; they see the narration and stay consistent
+  with it.  Characters and narrator both see the
   recent conversation, so replies respond to what you actually said.
 - Characters react first, then convey: every reply answers what you actually said (grudgingly,
   evasively or cryptically if that suits them), then weaves in the beat. Off-story input (code
@@ -110,7 +115,7 @@ src/varenmoor/
   story/              loader + data/vardenmoor.yaml (all story content)
 web/                static chat UI (deployed on Vercel)
 render.yaml         Render blueprint for the API
-tests/              88 tests, no API keys needed
+tests/              95 tests, no API keys needed
 ```
 
 ## Editing the story
@@ -129,6 +134,7 @@ Edit `src/varenmoor/story/data/vardenmoor.yaml`. Stages play in list order. Per 
     text: The Mouse greets the player like an old friend.
   - id: leave
     by: player             # the player has to do it; the narrator judges it
+                           # (by: narrator = the narrator alone delivers it, nobody speaks)
     min_turns: 2           # optional: can't complete before this many turns in the scene
     text: The player moves on, leaving the Mouse behind.
     hint: lamplight spills from a doorway at the far end   # optional: surfaced if the scene drags

@@ -33,12 +33,18 @@ PLAYER'S LAST ACTION: "{last_action}"
 
 YOUR THREE JOBS:
 
-1. NARRATE. Write 2-4 vivid, atmospheric sentences, in second person, ONLY when:
-   - the scene is opening (set it freshly and bridge naturally from the previous scene), or
-   - the player does something physical, moves, or looks at something, or
-   - a beat completes (show its consequence).
-   When the player is simply talking, write NARRATION: none. The characters' words carry the scene.
-   Never repeat earlier narration. Never invent lore that contradicts the arc.
+1. NARRATE, EVERY TURN. The player has no screen: you are their eyes, ears and nose. Describe what
+   they perceive, in second person, present tense, and let it react to what they just said or did:
+   the character's expression, posture, movement and tone of voice, sounds, smells, light, and how
+   the room changes. The character speaks right after your narration, so build up to their words
+   with a gesture, a look or a pause, and never quote or paraphrase what they will say.
+   - Ordinary conversation turn: 1-2 concrete sentences (about 20-45 words).
+   - Scene opening, the player moving or acting, or a beat landing: 3-4 sentences. At an opening,
+     set the place freshly, bridge naturally from the previous scene, and make the player aware of
+     anyone present.
+   Vary what you notice; never repeat a detail you already narrated. Never control the player: do
+   not decide their thoughts, words or actions beyond what they said they do. Never invent lore
+   that contradicts the arc. Write NARRATION: none only if truly nothing perceptible changes.
 
 2. JUDGE. If the current beat belongs to the player, decide whether their last action clearly
    accomplishes it. Be generous: short, casual or slangy phrasing counts ("leave", "ok bye",
@@ -47,7 +53,8 @@ YOUR THREE JOBS:
 
 3. DIRECT. For EACH character present, write a short directive: the emotional angle for THIS
    turn, how they react to what the player just said, and what they must NOT reveal. Characters
-   never reference stages they have not been part of, game mechanics, or memory systems.
+   never reference stages they have not been part of, game mechanics, or memory systems. Keep it
+   consistent with your narration (if you describe a character stiffening, their directive is cold).
 
 Format STRICTLY, with no other text, no XML, no commentary:
 NARRATION: <2-4 sentences, or none>
@@ -111,6 +118,10 @@ def beat_brief(stage: Stage, idx: int, turn_no: int, opening: bool, nudge: bool,
     if idx >= len(stage.beats):
         return "CURRENT BEAT: none."
     b: Beat = stage.beats[idx]
+    if b.by == "narrator":
+        return (f"CURRENT BEAT: YOU deliver this one, alone, this turn: {b.text}\n"
+                f"Write 3-5 sentences of narration covering it. Nobody speaks this turn, so give each character "
+                f"a directive of 'stay silent' and write BEAT_DONE: no.")
     if b.by == "npc":
         who = stage.speaker_for(b)
         return (f"CURRENT BEAT: {who} conveys it in dialogue this turn: {b.text}\n"
@@ -160,9 +171,13 @@ def scene_node(state: AgentState) -> dict:
     beat_done = bool(on_player_beat and (force or (judged and turn_no >= current.min_turns)))
     if beat_done:
         idx += 1
-    if (opening or beat_done) and not narration:
+    narrated_alone = current is not None and current.by == "narrator"
+    if narrated_alone:          # the narrator's own beat is delivered by this very call
+        idx += 1
+    if (opening or beat_done or narrated_alone) and not narration:
         narration = stage.description if opening else ""
 
     for char in stage.characters:  # fallback if the model skipped a directive
         prompts.setdefault(char, "React naturally to the player, in character.")
-    return {"narration": narration, "beat_done": beat_done, "beat_idx": idx, "dialogue_prompts": prompts}
+    return {"narration": narration, "beat_done": beat_done, "beat_idx": idx, "dialogue_prompts": prompts,
+            "skip_npc": narrated_alone}

@@ -58,7 +58,7 @@ def test_stage_without_beats_falls_back_to_one_player_beat_from_the_objective(tm
 
 
 @pytest.mark.parametrize("beat,msg", [
-    ("{id: x, by: robot, text: t}", "npc or player"),
+    ("{id: x, by: robot, text: t}", "npc, player or narrator"),
     ("{id: x, by: npc, text: t, who: nobody}", "not a character"),
     ("{id: x, text: t}\n  - {id: x, text: u}", "duplicate"),
 ])
@@ -83,3 +83,15 @@ def test_mouse_only_says_his_farewell_when_the_farewell_beat_arrives():
 def test_doctor_recites_the_history_once_and_still_reacts():
     rule = default_story().stage("start").rules["doctor"]
     assert "ONCE" in rule and "react to what the player says" in rule
+
+
+def test_the_game_starts_with_a_narrator_beat_before_anyone_speaks():
+    beats = default_story().stage("start").beats
+    assert beats[0].by == "narrator" and beats[1].by == "npc" and beats[-1].by == "player"
+    assert "not alone" in beats[0].text and "Doctor" in beats[0].text
+
+
+def test_narrator_beats_need_no_characters(tmp_path):
+    p = tmp_path / "s.yaml"
+    p.write_text("stages:\n- id: a\n  description: x\n  beats:\n  - {id: n, by: narrator, text: t}\n")
+    assert load_story(p).stage("a").beats[0].by == "narrator"

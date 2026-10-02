@@ -17,8 +17,9 @@ _DEFAULT_STORY = Path(__file__).parent / "data" / "vardenmoor.yaml"
 class Beat:
     """One step of a scene. Beats play strictly in order and are what moves the story on.
 
-    by="npc"     a character conveys it in dialogue (done once they have spoken it)
-    by="player"  the player has to do it (the narrator judges it from what the player says/does)
+    by="npc"       a character conveys it in dialogue (done once they have spoken it)
+    by="player"    the player has to do it (the narrator judges it from what the player says/does)
+    by="narrator"  the narrator alone delivers it (nobody speaks that turn), e.g. a scene's opening
     """
     id: str
     text: str
@@ -123,8 +124,9 @@ def _beats(d: dict, characters: tuple[str, ...], objective: str) -> tuple[Beat, 
         beat = Beat(id=str(b["id"]), text=str(b["text"]).strip(), by=b.get("by", "player"),
                     hint=str(b.get("hint", "")).strip(), min_turns=int(b.get("min_turns", 0)),
                     who=str(b.get("who", "")))
-        if beat.by not in ("npc", "player"):
-            raise ValueError(f"Stage '{d['id']}' beat '{beat.id}': 'by' must be npc or player, got '{beat.by}'.")
+        if beat.by not in ("npc", "player", "narrator"):
+            raise ValueError(f"Stage '{d['id']}' beat '{beat.id}': 'by' must be npc, player or narrator, "
+                             f"got '{beat.by}'.")
         if beat.by == "npc" and not (beat.who or characters):
             raise ValueError(f"Stage '{d['id']}' beat '{beat.id}' is an npc beat but the stage has no characters.")
         if beat.who and beat.who not in characters:

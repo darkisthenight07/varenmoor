@@ -22,12 +22,41 @@ def opened(stage="start", fake=None):
 
 
 # ── scenes open by themselves ─────────────────────────────────────────────
-def test_scene_opens_with_narration_and_the_npc_speaking_first(fake):
+def test_the_game_opens_with_the_narrator_alone_and_nobody_speaks_yet(fake):
     g = Game("p1")
     events = g.start()
-    assert [e.kind for e in events] == ["narration", "say"] and events[1].speaker == "doctor"
-    assert fake.roles_called() == ["narrator", "npc_dialogue"]      # no input review, no memory call
+    assert [e.kind for e in events] == ["narration"]
+    assert fake.roles_called() == ["narrator"]                      # no NPC call, no input review, no memory
     assert g.beat_idx == 1 and g.turn == 0 and not g.needs_open
+
+
+def test_the_doctor_first_speaks_in_reaction_to_the_player(fake):
+    g = opened(fake=fake)
+    events = g.submit("who am i?")
+    say = [e for e in events if e.kind == "say"]
+    assert [e.speaker for e in say] == ["doctor"] and g.beat_idx == 2          # 'greet' delivered
+    npc_prompt = [p for r, p in fake.calls if r == "npc_dialogue"][0]
+    assert "I look around the room." in npc_prompt and "notices the player is awake" in npc_prompt
+
+
+def test_scenes_that_open_with_a_character_still_do_so(fake):
+    g = Game("p1"); g.stage = "checkpoint1"
+    events = g.start()
+    assert [e.kind for e in events] == ["narration", "say"] and events[1].speaker == "mouse"
+
+
+def test_the_narrator_is_asked_to_narrate_every_turn_not_just_at_checkpoints(fake):
+    g = opened(fake=fake)
+    g.submit("hello")
+    prompt = [p for r, p in fake.calls if r == "narrator"][0]
+    assert "NARRATE, EVERY TURN" in prompt and "eyes, ears and nose" in prompt
+
+
+def test_the_npc_is_shown_this_turns_narration_so_both_stay_consistent(fake):
+    g = opened(fake=fake)
+    fake.replies["narrator"] = "NARRATION: The Doctor's jaw tightens.\nBEAT_DONE: no\nCHAR: doctor\nPROMPT: Be cold."
+    g.submit("hello")
+    assert "The Doctor's jaw tightens." in [p for r, p in fake.calls if r == "npc_dialogue"][0]
 
 
 def test_one_normal_turn_spends_three_blocking_calls_plus_one_memory_call(fake):
@@ -38,7 +67,7 @@ def test_one_normal_turn_spends_three_blocking_calls_plus_one_memory_call(fake):
     assert [e.kind for e in events] == ["narration", "say"] and g.stage == "start"
 
 
-def test_pure_dialogue_turn_shows_no_narration(fake):
+def test_a_none_narration_is_simply_not_shown(fake):
     g = opened(fake=fake)
     fake.replies["narrator"] = NOT_DONE.format(c="doctor")
     events = g.submit("Who are you?")
@@ -92,8 +121,14 @@ def test_npc_and_narrator_see_the_players_words_and_the_scene_so_far(fake):
 
 
 # ── natural progression ───────────────────────────────────────────────────
-def test_completing_the_player_beat_moves_on_and_opens_the_next_scene(fake):
+def at_leave_beat(fake):
     g = opened("start", fake)
+    g.beat_idx = 3                                   # wake, greet and history are done; the player must leave
+    return g
+
+
+def test_completing_the_player_beat_moves_on_and_opens_the_next_scene(fake):
+    g = at_leave_beat(fake)
     fake.replies["narrator"] = DONE.format(c="doctor")
     events = g.submit("I walk out")
     g.close()
@@ -134,7 +169,7 @@ def test_scene_with_no_characters_ends_on_the_players_action_then_plays_cutscene
 
 
 def test_lingering_too_long_carries_the_player_along(fake):
-    g = opened("start", fake)
+    g = at_leave_beat(fake)
     fake.replies["narrator"] = NOT_DONE.format(c="doctor")
     g.turn = default_story().stage("start").max_turns              # one more turn than allowed
     g.submit("I keep talking")
@@ -143,7 +178,7 @@ def test_lingering_too_long_carries_the_player_along(fake):
 
 
 def test_dragging_scene_gets_a_nudge_with_the_hint(fake):
-    g = opened("start", fake)
+    g = at_leave_beat(fake)
     fake.replies["narrator"] = NOT_DONE.format(c="doctor")
     g.turn = default_story().stage("start").nudge_turns
     g.submit("Hmm")
@@ -152,7 +187,7 @@ def test_dragging_scene_gets_a_nudge_with_the_hint(fake):
 
 
 def test_no_nudge_early_in_a_scene(fake):
-    g = opened("start", fake)
+    g = at_leave_beat(fake)
     g.submit("Hmm")
     assert "dragging" not in [p for r, p in fake.calls if r == "narrator"][0]
 
@@ -179,7 +214,7 @@ def test_outage_leaves_game_state_unchanged(fake):
 
 
 def test_outage_while_opening_the_next_scene_resumes_later(fake):
-    g = opened("start")
+    g = opened("start"); g.beat_idx = 3
     fake.replies["narrator"] = DONE.format(c="doctor")
     real_ask, count = fake.ask, {"n": 0}
 
@@ -220,3 +255,11 @@ def test_npc_is_told_not_to_repeat_itself_or_say_farewell_early(fake):
     g.submit("who am i?")
     p = [p for r, p in fake.calls if r == "npc_dialogue"][0]
     assert "Never repeat information" in p and "do not say a farewell" in p
+
+
+def test_a_narrator_beat_delivered_mid_scene_silences_the_characters_that_turn(fake):
+    g = opened(fake=fake)
+    g.beat_idx = 0                                   # replay the narrator's beat as if it were the current one
+    events = g.submit("I sit up")
+    assert [e.kind for e in events] == ["narration"] and g.beat_idx == 1
+    assert "npc_dialogue" not in fake.roles_called()

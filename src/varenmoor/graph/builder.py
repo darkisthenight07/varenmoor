@@ -32,6 +32,8 @@ def build_agent(story: Story | None = None):
         # A scene whose last beat the player just completed ends without another NPC line.
         if stage.beats and state.get("beat_idx", 0) >= len(stage.beats):
             return ["output_reviewer"]
+        if state.get("skip_npc"):          # the narrator delivered a beat on its own
+            return ["output_reviewer"]
         return [_node(c) for c in stage.characters] or ["output_reviewer"]
 
     g.add_conditional_edges("scene", route,
