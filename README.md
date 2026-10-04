@@ -1,6 +1,6 @@
 # Varenmoor
 
-A multi-agent gothic-horror text game built on [LangGraph](https://langchain-ai.github.io/langgraph/).
+A multi-agent adventure text game built on [LangGraph](https://langchain-ai.github.io/langgraph/).
 You wake inside Vardenmoor, a cursed castle. A narrator, a cast of NPCs (each with emotions and
 memory) and two reviewers respond to what you say. Different LLMs handle different jobs, with automatic
 fallbacks, so it runs entirely on free-tier APIs (no local GPU needed).
