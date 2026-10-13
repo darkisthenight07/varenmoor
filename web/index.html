@@ -304,7 +304,8 @@ button, input { font: inherit; }
     setBusy(true);
     errorEl.hidden = true;
 
-    var call = !sessionId
+    var startingSession = !sessionId;
+    var call = startingSession
       ? request('/api/session', { player: message }).then(function (result) {
           sessionId = result.session_id;
           setPlaying(true);
@@ -318,11 +319,22 @@ button, input { font: inherit; }
         });
 
     var succeeded = false;
-    call.then(function () { succeeded = true; }).catch(function (caught) {
+    var clearInput = startingSession;
+    call.then(function (result) {
+      succeeded = true;
+      if (!startingSession) {
+        clearInput = result.input_consumed !== false;
+        if (clearInput) addEntry({ kind: 'you', text: message });
+        else {
+          errorEl.textContent = 'The scene is still opening. Your turn is ready to retry.';
+          errorEl.hidden = false;
+        }
+      }
+    }).catch(function (caught) {
       errorEl.textContent = caught instanceof Error ? caught.message : 'Something went wrong. Please try again.';
       errorEl.hidden = false;
     }).finally(function () {
-      if (succeeded) input.value = '';
+      if (succeeded && clearInput) input.value = '';
       setBusy(false);
       input.focus();
       scrollToEnd();

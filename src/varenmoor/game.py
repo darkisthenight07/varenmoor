@@ -42,6 +42,7 @@ class Game:
         self._needs_open = True       # the current scene has not been opened yet
         self._pool: ThreadPoolExecutor | None = None
         self._pending: list[Future] = []
+        self.last_input_consumed = False
 
     @property
     def finished(self) -> bool:
@@ -143,14 +144,21 @@ class Game:
     def submit(self, text: str) -> list[Event]:
         """Play one player turn and return what the player sees, including the next scene's
         opening if this turn finished the scene. May raise llm.AllModelsFailed (state unchanged)."""
+        self.last_input_consumed = False
         if self.finished:
             return [Event("end")]
+        events: list[Event] = []
         if self._needs_open:                  # an earlier outage left the scene unopened
-            return self.start()
+            events.extend(self.start())
+            # Recovery should not silently consume the player's turn. If the opening still failed,
+            # the request raises above; otherwise continue with the same text in the opened scene.
+            if self._needs_open or self.finished or not text.strip():
+                return events
         self.wait_for_memory()
         out = self._invoke(text, opening=False)
+        self.last_input_consumed = True
         self.turn += 1
-        events = self._events(out)
+        events.extend(self._events(out))
         sanitized = out.get("sanitized_input", "")
         self._record(sanitized, events)
         self._consolidate(sanitized, out.get("final_responses") or {})

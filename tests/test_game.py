@@ -228,8 +228,9 @@ def test_outage_while_opening_the_next_scene_resumes_later(fake):
     fake.ask = flaky
     g.submit("I leave")
     assert g.stage == "checkpoint1" and g.needs_open
-    events = g.submit("anything")                    # next call opens the scene instead
+    events = g.submit("anything")                    # recovery opens the scene and keeps this turn
     assert not g.needs_open and any(e.kind == "say" and e.speaker == "mouse" for e in events)
+    assert g.last_input_consumed and g.turn == 1
 
 
 # ── dev shortcut ──────────────────────────────────────────────────────────

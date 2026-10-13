@@ -75,8 +75,8 @@ def check_line(story: Story, stage_id: str, response: str) -> list[str]:
     return flags
 
 
-def output_reviewer_node(state: AgentState) -> dict:
-    story = default_story()
+def output_reviewer_node(state: AgentState, story: Story | None = None) -> dict:
+    story = story or default_story()
     stage = story.stage(state["stage"])
     mode = llm.pipeline().output_review
     arc = story.arc_summary(stage.id)

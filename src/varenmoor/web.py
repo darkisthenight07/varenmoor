@@ -102,4 +102,5 @@ def message(sid: str, body: Message) -> dict:
             events = game.submit(text)
         except llm.AllModelsFailed as exc:
             raise HTTPException(503, f"The castle falls silent. Try again shortly. ({exc})")
-    return {"events": _wire(events), "finished": game.finished}
+    return {"events": _wire(events), "finished": game.finished,
+            "input_consumed": game.last_input_consumed}

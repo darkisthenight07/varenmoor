@@ -143,8 +143,8 @@ def beat_brief(stage: Stage, idx: int, turn_no: int, opening: bool, nudge: bool,
     return out
 
 
-def scene_node(state: AgentState) -> dict:
-    story = default_story()
+def scene_node(state: AgentState, story=None) -> dict:
+    story = story or default_story()
     stage = story.stage(state["stage"])
     idx = state.get("beat_idx", 0)
     opening = state.get("opening", False)

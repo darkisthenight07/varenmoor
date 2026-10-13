@@ -255,13 +255,13 @@ stages:
   beats:
   - id: cold
     by: npc
-    text: The Old Woman speaks first, flat and cold. The warmth is gone. She says the player brought it to her, and that part is done.
+    text: The Old Woman speaks first, flat and cold. The warmth is gone. She says the player touched her sister's portrait, and that is enough.
   - id: smile
     by: npc
     text: The Old Woman begins to smile, and the smile is wrong.
   - id: rage
     by: npc
-    text: The smile inverts into rage. She says, with fury, that she will take revenge for her sister, the woman in the painting.
+    text: The smile inverts into rage. She swears vengeance for her sister, whose likeness hangs in the gallery.
   - id: monster
     by: npc
     text: The Old Woman transforms into a monster. Her words fragment and slowly devolve into non-verbal monstrous sounds.
@@ -289,8 +289,8 @@ stages:
 
       Example tone (early in encounter):
       "You brought it to me. Good. That part is done."
-      "My sister... you saw her. You touched her painting. That's enough."
-      (rage) "She is GONE. And you — you walked right past her and let her go. I will not."
+      "My sister... you saw her. You touched her portrait. That is enough."
+      (rage) "You have put your hands on what remains of her. I will not let that pass."
       (transforming, fragmenting) "I will — the loop — the time — you will never — "
       (dying, cursing) "...time... takes you... both... again..."
 - id: checkpoint6

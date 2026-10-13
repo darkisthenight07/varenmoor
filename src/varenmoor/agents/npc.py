@@ -61,9 +61,10 @@ Speak your line now.
 """
 
 
-def make_npc_dialogue_node(character: str):
+def make_npc_dialogue_node(character: str, story=None):
+    story = story or default_story()
     def node(state: AgentState) -> dict:
-        stage = default_story().stage(state["stage"])
+        stage = story.stage(state["stage"])
         pid = state["player_id"]
         idx = state.get("beat_idx", 0)
         beat = stage.beats[idx] if idx < len(stage.beats) else None

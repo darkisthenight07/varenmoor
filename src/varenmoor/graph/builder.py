@@ -18,10 +18,10 @@ def build_agent(story: Story | None = None):
     story = story or default_story()
     g = StateGraph(AgentState)
     g.add_node("input_reviewer", input_reviewer_node)
-    g.add_node("scene", scene_node)
-    g.add_node("output_reviewer", output_reviewer_node)
+    g.add_node("scene", lambda state: scene_node(state, story))
+    g.add_node("output_reviewer", lambda state: output_reviewer_node(state, story))
     for char in story.characters:
-        g.add_node(_node(char), make_npc_dialogue_node(char))
+        g.add_node(_node(char), make_npc_dialogue_node(char, story))
         g.add_edge(_node(char), "output_reviewer")
 
     g.set_entry_point("input_reviewer")
