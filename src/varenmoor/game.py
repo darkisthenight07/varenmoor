@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from . import llm
 from .agents import OFF_WORLD, SILENT, consolidate
 from .graph import build_agent
-from .memory import long_term
 from .state import initial_state
 from .story import ENDING, Story, default_story
 
@@ -174,4 +173,3 @@ class Game:
         finally:
             if self._pool:
                 self._pool.shutdown(wait=True)
-            long_term.close()

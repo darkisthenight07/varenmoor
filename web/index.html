@@ -317,11 +317,12 @@ button, input { font: inherit; }
           setEnded(result.events.some(function (e) { return e.kind === 'end'; }));
         });
 
-    call.catch(function (caught) {
+    var succeeded = false;
+    call.then(function () { succeeded = true; }).catch(function (caught) {
       errorEl.textContent = caught instanceof Error ? caught.message : 'Something went wrong. Please try again.';
       errorEl.hidden = false;
     }).finally(function () {
-      input.value = '';
+      if (succeeded) input.value = '';
       setBusy(false);
       input.focus();
       scrollToEnd();

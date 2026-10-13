@@ -17,10 +17,21 @@ from .story import default_story
 
 MAX_SESSIONS = int(os.getenv("MAX_SESSIONS", "200"))
 SESSION_TTL = int(os.getenv("SESSION_TTL_SECONDS", "3600"))
+if MAX_SESSIONS < 1:
+    raise ValueError("MAX_SESSIONS must be at least 1")
+if SESSION_TTL < 1:
+    raise ValueError("SESSION_TTL_SECONDS must be at least 1")
 
 app = FastAPI(title="Varenmoor")
 origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
+
+
+@app.on_event("shutdown")
+def close_shared_resources() -> None:
+    # The Neo4j driver is process-wide, so individual session expiry must not close it.
+    from .memory import long_term
+    long_term.close()
 
 _sessions: dict[str, dict] = {}
 _lock = threading.Lock()
@@ -81,11 +92,14 @@ def new_session(body: NewSession) -> dict:
 
 @app.post("/api/session/{sid}/message")
 def message(sid: str, body: Message) -> dict:
+    text = body.text.strip()
+    if not text:
+        raise HTTPException(422, "Write something before sending your turn.")
     s = _get(sid)
     game: Game = s["game"]
     with s["lock"]:
         try:
-            events = game.submit(body.text.strip())
+            events = game.submit(text)
         except llm.AllModelsFailed as exc:
             raise HTTPException(503, f"The castle falls silent. Try again shortly. ({exc})")
     return {"events": _wire(events), "finished": game.finished}
